@@ -4,5 +4,6 @@ A Rate Limiter implementation using Spring Boot. This project explores various r
 ## Implemented Algorithms
 
 - [Leaky Bucket](docs/leaky-bucket.md)
+- [Token Bucket](docs/token-bucket.md)
 
 See [docs](docs/README.md) for the learning path, architecture notes, and algorithm comparisons.
