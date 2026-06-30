@@ -26,6 +26,7 @@ This folder explains each rate-limiting algorithm in a simple, interview-friendl
 controller/
   LeakyBucketRateLimiterController.java
   TokenBucketRateLimiterController.java
+  FixedWindowRateLimiterController.java
 algorithm/
   leakybucket/
     LeakyBucketRateLimiterService.java
@@ -37,10 +38,16 @@ algorithm/
     TokenBucketState.java
     TokenBucketDecision.java
     TokenBucketConfiguration.java
+  fixedwindow/
+    FixedWindowRateLimiterService.java
+    FixedWindowState.java
+    FixedWindowDecision.java
+    FixedWindowConfiguration.java
 docs/
   README.md
   leaky-bucket.md
   token-bucket.md
+  fixed-window.md
 ```
 
 For MAANG-style system design learning, keep the code simple first, then discuss production concerns separately: distributed state, clock behavior, race conditions, Redis Lua scripts, hot-key handling, and fallback behavior when Redis is down.

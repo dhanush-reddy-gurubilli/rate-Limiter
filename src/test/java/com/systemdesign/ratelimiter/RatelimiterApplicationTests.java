@@ -2,6 +2,9 @@ package com.systemdesign.ratelimiter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.systemdesign.ratelimiter.algorithm.fixedwindow.FixedWindowConfiguration;
+import com.systemdesign.ratelimiter.algorithm.fixedwindow.FixedWindowDecision;
+import com.systemdesign.ratelimiter.algorithm.fixedwindow.FixedWindowRateLimiterService;
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketConfiguration;
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketDecision;
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketRateLimiterService;
@@ -16,7 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 		"rate-limiter.leaky-bucket.capacity=2",
 		"rate-limiter.leaky-bucket.leak-rate-per-second=0.000001",
 		"rate-limiter.token-bucket.capacity=2",
-		"rate-limiter.token-bucket.refill-rate-per-second=0.000001"
+		"rate-limiter.token-bucket.refill-rate-per-second=0.000001",
+		"rate-limiter.fixed-window.max-requests=2",
+		"rate-limiter.fixed-window.window-size-seconds=60"
 })
 class RatelimiterApplicationTests {
 
@@ -25,6 +30,9 @@ class RatelimiterApplicationTests {
 
 	@Autowired
 	private TokenBucketRateLimiterService tokenBucketRateLimiterService;
+
+	@Autowired
+	private FixedWindowRateLimiterService fixedWindowRateLimiterService;
 
 	@Test
 	void contextLoads() {
@@ -69,6 +77,27 @@ class RatelimiterApplicationTests {
 		assertThat(rejectedDecision.allowed()).isFalse();
 		assertThat(rejectedDecision.capacity()).isEqualTo(configuration.capacity());
 		assertThat(rejectedDecision.currentTokens()).isBetween(0.0, 0.001);
+	}
+
+	@Test
+	void fixedWindowRejectsRequestWhenWindowLimitIsReached() {
+		String clientId = "fixed-window-test-client";
+		fixedWindowRateLimiterService.resetClient(clientId);
+		FixedWindowConfiguration configuration = fixedWindowRateLimiterService.configuration();
+
+		for (int request = 0; request < configuration.maxRequests(); request++) {
+			FixedWindowDecision decision = fixedWindowRateLimiterService.allowRequest(clientId);
+
+			assertThat(decision.allowed()).isTrue();
+			assertThat(decision.clientId()).isEqualTo(clientId);
+		}
+
+		FixedWindowDecision rejectedDecision = fixedWindowRateLimiterService.allowRequest(clientId);
+
+		assertThat(rejectedDecision.allowed()).isFalse();
+		assertThat(rejectedDecision.maxRequests()).isEqualTo(configuration.maxRequests());
+		assertThat(rejectedDecision.windowSizeSeconds()).isEqualTo(configuration.windowSizeSeconds());
+		assertThat(rejectedDecision.requestCount()).isEqualTo(configuration.maxRequests());
 	}
 
 }

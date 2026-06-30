@@ -5,5 +5,6 @@ A Rate Limiter implementation using Spring Boot. This project explores various r
 
 - [Leaky Bucket](docs/leaky-bucket.md)
 - [Token Bucket](docs/token-bucket.md)
+- [Fixed Window](docs/fixed-window.md)
 
 See [docs](docs/README.md) for the learning path, architecture notes, and algorithm comparisons.
