@@ -8,6 +8,9 @@ import com.systemdesign.ratelimiter.algorithm.fixedwindow.FixedWindowRateLimiter
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketConfiguration;
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketDecision;
 import com.systemdesign.ratelimiter.algorithm.leakybucket.LeakyBucketRateLimiterService;
+import com.systemdesign.ratelimiter.algorithm.slidingwindowlog.SlidingWindowLogConfiguration;
+import com.systemdesign.ratelimiter.algorithm.slidingwindowlog.SlidingWindowLogDecision;
+import com.systemdesign.ratelimiter.algorithm.slidingwindowlog.SlidingWindowLogRateLimiterService;
 import com.systemdesign.ratelimiter.algorithm.tokenbucket.TokenBucketConfiguration;
 import com.systemdesign.ratelimiter.algorithm.tokenbucket.TokenBucketDecision;
 import com.systemdesign.ratelimiter.algorithm.tokenbucket.TokenBucketRateLimiterService;
@@ -21,7 +24,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 		"rate-limiter.token-bucket.capacity=2",
 		"rate-limiter.token-bucket.refill-rate-per-second=0.000001",
 		"rate-limiter.fixed-window.max-requests=2",
-		"rate-limiter.fixed-window.window-size-seconds=60"
+		"rate-limiter.fixed-window.window-size-seconds=60",
+		"rate-limiter.sliding-window-log.max-requests=2",
+		"rate-limiter.sliding-window-log.window-size-seconds=60"
 })
 class RatelimiterApplicationTests {
 
@@ -33,6 +38,9 @@ class RatelimiterApplicationTests {
 
 	@Autowired
 	private FixedWindowRateLimiterService fixedWindowRateLimiterService;
+
+	@Autowired
+	private SlidingWindowLogRateLimiterService slidingWindowLogRateLimiterService;
 
 	@Test
 	void contextLoads() {
@@ -93,6 +101,27 @@ class RatelimiterApplicationTests {
 		}
 
 		FixedWindowDecision rejectedDecision = fixedWindowRateLimiterService.allowRequest(clientId);
+
+		assertThat(rejectedDecision.allowed()).isFalse();
+		assertThat(rejectedDecision.maxRequests()).isEqualTo(configuration.maxRequests());
+		assertThat(rejectedDecision.windowSizeSeconds()).isEqualTo(configuration.windowSizeSeconds());
+		assertThat(rejectedDecision.requestCount()).isEqualTo(configuration.maxRequests());
+	}
+
+	@Test
+	void slidingWindowLogRejectsRequestWhenWindowLimitIsReached() {
+		String clientId = "sliding-window-log-test-client";
+		slidingWindowLogRateLimiterService.resetClient(clientId);
+		SlidingWindowLogConfiguration configuration = slidingWindowLogRateLimiterService.configuration();
+
+		for (int request = 0; request < configuration.maxRequests(); request++) {
+			SlidingWindowLogDecision decision = slidingWindowLogRateLimiterService.allowRequest(clientId);
+
+			assertThat(decision.allowed()).isTrue();
+			assertThat(decision.clientId()).isEqualTo(clientId);
+		}
+
+		SlidingWindowLogDecision rejectedDecision = slidingWindowLogRateLimiterService.allowRequest(clientId);
 
 		assertThat(rejectedDecision.allowed()).isFalse();
 		assertThat(rejectedDecision.maxRequests()).isEqualTo(configuration.maxRequests());

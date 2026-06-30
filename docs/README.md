@@ -27,6 +27,7 @@ controller/
   LeakyBucketRateLimiterController.java
   TokenBucketRateLimiterController.java
   FixedWindowRateLimiterController.java
+  SlidingWindowLogRateLimiterController.java
 algorithm/
   leakybucket/
     LeakyBucketRateLimiterService.java
@@ -43,11 +44,17 @@ algorithm/
     FixedWindowState.java
     FixedWindowDecision.java
     FixedWindowConfiguration.java
+  slidingwindowlog/
+    SlidingWindowLogRateLimiterService.java
+    SlidingWindowLogState.java
+    SlidingWindowLogDecision.java
+    SlidingWindowLogConfiguration.java
 docs/
   README.md
   leaky-bucket.md
   token-bucket.md
   fixed-window.md
+  sliding-window-log.md
 ```
 
 For MAANG-style system design learning, keep the code simple first, then discuss production concerns separately: distributed state, clock behavior, race conditions, Redis Lua scripts, hot-key handling, and fallback behavior when Redis is down.
